@@ -4,8 +4,10 @@ LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 const int lightPin = 0;
 const int temperaturePin = 1;
+const int trigPin = 7;
+const int echoPin = 6; //pwm
 
-int lightLevel;
+int lightLevel, dist, centimeters;
 int calibratedlightLevel; // used to store the scaled / calibrated lightLevel
 int maxThreshold = 0;     // used for setting the "max" light level
 int minThreshold = 1023;   // used for setting the "min" light level
@@ -16,6 +18,11 @@ void setup()
   lcd.begin(16, 2); //Initialize the 16x2 LCD
   lcd.clear();  //Clear any old data displayed on the LCD
 
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  Serial.begin(9600);
+
 }
 
 void loop()
@@ -23,7 +30,7 @@ void loop()
 
  lightLevel = analogRead(lightPin);
  lcd.setCursor(0, 0);
- lcd.print("LIGHT: ");
+ lcd.print("L: ");
  lcd.print(lightLevel);
 
  float voltage, degreesC, degreesF;
@@ -34,7 +41,12 @@ void loop()
  lcd.print("TEMP: ");
  lcd.print(degreesF);
  
- delay(1000);
+ dist = ping(trigPin, echoPin);
+ lcd.setCursor(10, 0);
+ lcd.print("D: ");
+ lcd.print(dist);
+ 
+ delay(100);
  
 }
 
@@ -65,6 +77,21 @@ void autoRange()
 
   lightLevel = map(lightLevel, minThreshold, maxThreshold, 0, 255);
   lightLevel = constrain(lightLevel, 0, 255);
+}
+
+int ping(int trigPin, int echoPin) //echo pin is PWM
+{
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    
+    long duration = pulseIn(echoPin, HIGH);
+    
+    centimeters = int(duration / 58.2);
+
+    return centimeters;
 }
 
 
